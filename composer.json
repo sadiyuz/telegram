@@ -1,0 +1,19 @@
+{
+  "name": "sadiyuz/telegram-class",
+  "description": "Telegram bot uchun PHP class",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Sadiyuz\\Telegram\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Saidabror",
+      "email": "meproseen@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {}
+}
