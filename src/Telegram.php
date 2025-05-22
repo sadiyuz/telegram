@@ -6,185 +6,59 @@
  * If you also need the perfect Telegram bot, get in touch!
  */
 
-namespace Sadiyuz\Telegram;
+namespace sadiyuz;
+
+use sadiyuz\Logger\Logger;
 
 class Telegram
 {
     protected string $bot_token;
+    private $logger;
     public const TELEGRAM_BOT_API = "https://api.telegram.org/bot";
 
-    public function __construct(string $bot_token)
+    public function __construct(string $bot_token, Logger $logger)
     {
         $this->bot_token = $bot_token;
+        $this->logger = $logger;
     }
 
     public function request($method, $params = [])
     {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, self::TELEGRAM_BOT_API . $this->bot_token . "/" . $method);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        $response = curl_exec($ch);
-        curl_close($ch);
-        return json_decode($response, true);
-    }
+        try {
+            $ch = curl_init();
+            if ($ch === false) {
+                throw new \Exception('cURL init failed');
+            }
 
-    public function getWebhookUpdate()
-    {
-        return json_decode(file_get_contents('php://input'), true);
-    }
+            curl_setopt($ch, CURLOPT_URL, self::TELEGRAM_BOT_API . $this->bot_token . "/" . $method);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-    public function sendMessage($chatId, $text, $mode = 'html', $msgId = null, $keyboard = null)
-    {
-        $data = $this->request('sendmessage', [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'parse_mode' => $mode,
-            'disable_web_page_preview' => true,
-            'reply_to_message_id' => $msgId,
-            'reply_markup' => $keyboard
-        ]);
-        return $data;
-    }
+            $response = curl_exec($ch);
 
-    public function sendPhoto($chatId, $photo, $caption = '', $mode = 'html', $keyboard = null, $opt = [])
-    {
-        $params = [
-            'chat_id' => $chatId,
-            'photo' => $photo,
-            'caption' => $caption,
-            'parse_mode' => $mode,
-            'reply_markup' => $keyboard
-        ];
-        $data = array_merge($params, $opt);
-        $response = $this->request('sendPhoto', $data);
-        return $response;
-    }
+            if ($response === false) {
+                $error = curl_error($ch);
+                curl_close($ch);
+                throw new \Exception("cURL error: " . $error);
+            }
 
-    public function sendVideo($chatId, $video, $caption = '', $mode = 'html', $keyboard = null, $opt = [])
-    {
-        $params = [
-            'chat_id' => $chatId,
-            'video' => $video,
-            'caption' => $caption,
-            'parse_mode' => $mode,
-            'reply_markup' => $keyboard
-        ];
-        $data = array_merge($params, $opt);
-        $response = $this->request('sendVideo', $data);
-        return $response;
-    }
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
 
-    public function sendDocument($chatId, $document, $caption = '', $mode = 'html', $keyboard = null, $opt = [])
-    {
-        $params = [
-            'chat_id' => $chatId,
-            'document' => $document,
-            'caption' => $caption,
-            'parse_mode' => $mode,
-            'reply_markup' => $keyboard
-        ];
-        $data = array_merge($params, $opt);
-        $response = $this->request('sendPhoto', $data);
-        return $response;
-    }
+            if ($httpCode !== 200) {
+                throw new \Exception("Telegram API returned HTTP code " . $httpCode . ". Response: " . $response);
+            }
 
-    public function editMessageText($chatId, $text, $mode, $msgId, $keyboard = null, $opt = [])
-    {
-        $params = [
-            'chat_id' => $chatId,
-            'text' => $text,
-            'parse_mode' => $mode,
-            'message_id' => $msgId,
-            'reply_markup' => $keyboard
-        ];
-        $data = array_merge($params, $opt);
-        $response = $this->request('editMessageText', $data);
-        return $response;
-    }
+            $decoded = json_decode($response, true);
 
-    public function editMessageCaption($chatId, $caption, $mode, $msgId, $keyboard = null, $opt = [])
-    {
-        $params = [
-            'chat_id' => $chatId,
-            'caption' => $caption,
-            'parse_mode' => $mode,
-            'message_id' => $msgId,
-            'reply_markup' => $keyboard
-        ];
-        $data = array_merge($params, $opt);
-        $response = $this->request('editMessageCaption', $data);
-        return $response;
-    }
+            if ($decoded === null) {
+                throw new \Exception("Failed to decode JSON response: " . $response);
+            }
 
-    public function editMessageReplyMarkup($chatId, $msgId, $keyboard = null)
-    {
-        $params = [
-            'chat_id' => $chatId,
-            'message_id' => $msgId,
-            'reply_markup' => $keyboard
-        ];
-        $response = $this->request('editMessageReplyMarkup', $params);
-        return $response;
-    }
-
-    public function deleteMessage($chatId, $msgId)
-    {
-        $params = [
-            'chat_id' => $chatId,
-            'message_id' => $msgId
-        ];
-        $response = $this->request('deleteMessage', $params);
-        return $response;
-    }
-
-    public function reply($text, $keyboard = null)
-    {
-        $update = $this->getWebhookUpdate();
-        $chatId = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'];
-        $msgId = $update['message']['message_id'] ?? $update['callback_query']['message']['message_id'];
-
-        return $this->sendMessage($chatId, $text, 'html', $msgId, $keyboard);
-    }
-
-    public function replyWithPhoto($photo, $caption = null, $keyboard = null)
-    {
-        $update = $this->getWebhookUpdate();
-        $chatId = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'];
-        $msgId = $update['message']['message_id'] ?? $update['callback_query']['message']['message_id'];
-
-        $params = ['reply_to_message_id' => $msgId];
-        return $this->sendPhoto($chatId, $photo, $caption, 'html', $keyboard, $params);
-    }
-
-    public function replyWithVideo($video, $caption = null, $keyboard = null)
-    {
-        $update = $this->getWebhookUpdate();
-        $chatId = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'];
-        $msgId = $update['message']['message_id'] ?? $update['callback_query']['message']['message_id'];
-
-        $params = ['reply_to_message_id' => $msgId];
-        return $this->sendVideo($chatId, $video, $caption, 'html', $keyboard, $params);
-    }
-
-    public function replyWithDocument($document, $caption = null, $keyboard = null)
-    {
-        $update = $this->getWebhookUpdate();
-        $chatId = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'];
-        $msgId = $update['message']['message_id'] ?? $update['callback_query']['message']['message_id'];
-
-        $params = ['reply_to_message_id' => $msgId];
-        return $this->sendDocument($chatId, $document, $caption, 'html', $keyboard, $params);
-    }
-
-
-    public function editReplyMessageText($text, $keyboard = null)
-    {
-        $update = $this->getWebhookUpdate();
-        $chatId = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'];
-        $msgId = $update['message']['message_id'] ?? $update['callback_query']['message']['message_id'];
-
-        $params = ['reply_to_message_id' => $msgId];
-        return $this->editMessageText($chatId, $text, 'html', $msgId, $keyboard);
+            return $decoded;
+        } catch (\Exception $e) {
+            $this->logger->log("Telegram API request error: " . $e->getMessage());
+            return false;
+        }
     }
 }
