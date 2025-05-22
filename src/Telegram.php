@@ -8,7 +8,7 @@
 
 namespace sadiyuz;
 
-use sadiyuz\Logger\Logger;
+use sadiyuz\Logger;
 
 class Telegram
 {
