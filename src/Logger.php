@@ -1,6 +1,6 @@
 <?php
 
-namespace sadiyuz\Logger;
+namespace sadiyuz;
 
 class Logger
 {

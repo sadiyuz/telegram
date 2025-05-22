@@ -1,6 +1,6 @@
 <?php
 
-namespace sadiyuz\Message;
+namespace sadiyuz;
 
 use sadiyuz\Telegram;
 use sadiyuz\Update;

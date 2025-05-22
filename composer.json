@@ -5,7 +5,7 @@
   "license": "MIT",
   "autoload": {
     "psr-4": {
-      "Sadiyuz\\Telegram\\": "src/"
+      "sadiyuz\\Telegram\\": "src/"
     }
   },
   "authors": [
@@ -21,6 +21,7 @@
     }
   ],
   "minimum-stability": "dev",
+  "prefer-stable": true,
   "require": {
     "sadiyuz/telegram-class": "dev-main"
   }
