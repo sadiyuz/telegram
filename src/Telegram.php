@@ -32,6 +32,10 @@ class Telegram
     {
         $options = [];
 
+        $params = array_filter($params, function ($value) {
+            return !is_null($value);
+        });
+
         if ($httpMethod === 'GET') {
             $options['query'] = $params;
         } else {
