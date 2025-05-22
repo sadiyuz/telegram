@@ -9,56 +9,43 @@
 namespace sadiyuz;
 
 use sadiyuz\Logger;
+use GuzzleHttp\Client;
+
 
 class Telegram
 {
     protected string $bot_token;
     private $logger;
-    public const TELEGRAM_BOT_API = "https://api.telegram.org/bot";
+    protected $client;
 
     public function __construct(string $bot_token, Logger $logger)
     {
         $this->bot_token = $bot_token;
         $this->logger = $logger;
+
+        $this->client = new Client([
+            'base_uri' => "https://api.telegram.org/bot{$this->bot_token}/"
+        ]);
     }
 
-    public function request($method, $params = [])
+    public function request(string $method, array $params = [], string $httpMethod = 'POST')
     {
+        $options = [];
+
+        if ($httpMethod === 'GET') {
+            $options['query'] = $params;
+        } else {
+            $options['json'] = $params;
+        }
+
         try {
-            $ch = curl_init();
-            if ($ch === false) {
-                throw new \Exception('cURL init failed');
-            }
-
-            curl_setopt($ch, CURLOPT_URL, self::TELEGRAM_BOT_API . $this->bot_token . "/" . $method);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $params);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-
-            $response = curl_exec($ch);
-
-            if ($response === false) {
-                $error = curl_error($ch);
-                curl_close($ch);
-                throw new \Exception("cURL error: " . $error);
-            }
-
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
-
-            if ($httpCode !== 200) {
-                throw new \Exception("Telegram API returned HTTP code " . $httpCode . ". Response: " . $response);
-            }
-
-            $decoded = json_decode($response, true);
-
-            if ($decoded === null) {
-                throw new \Exception("Failed to decode JSON response: " . $response);
-            }
-
-            return $decoded;
+            $response = $this->client->request($httpMethod, $method, $options);
+            return json_decode($response->getBody(), true);
         } catch (\Exception $e) {
-            $this->logger->log("Telegram API request error: " . $e->getMessage());
-            return false;
+            return [
+                'ok' => false,
+                'description' => $e->getMessage(),
+            ];
         }
     }
 }
