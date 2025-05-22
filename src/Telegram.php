@@ -42,6 +42,7 @@ class Telegram
             $response = $this->client->request($httpMethod, $method, $options);
             return json_decode($response->getBody(), true);
         } catch (\Exception $e) {
+            $this->logger->log($e->getMessage());
             return [
                 'ok' => false,
                 'description' => $e->getMessage(),

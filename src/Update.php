@@ -47,7 +47,13 @@ class Update
         if (!$update) {
             return null;
         }
+        
+        $this->updates[] = $update;
 
         return $update;
+    }
+
+    public function getUpdates() {
+        return $this->updates;
     }
 }

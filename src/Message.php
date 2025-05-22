@@ -17,14 +17,18 @@ class Message {
 
     public function sendMessage($chatId, $text, $mode = 'html', $msgId = null, $keyboard = null)
     {
-        $data = $this->telegram->request('sendmessage', [
+        $params = [
             'chat_id' => $chatId,
             'text' => $text,
             'parse_mode' => $mode,
             'disable_web_page_preview' => true,
             'reply_to_message_id' => $msgId,
             'reply_markup' => $keyboard
-        ]);
+        ];
+        $params = array_filter($params, function ($value) {
+            return !is_null($value);
+        });
+        $data = $this->telegram->request('sendmessage', $params);
         return $data;
     }
 
@@ -121,7 +125,8 @@ class Message {
 
     public function reply($text, $keyboard = null)
     {
-        $update = $this->update->getUpdateWebhook();
+        $update = $this->update->getUpdates();
+        $update = $update[count($update) - 1];
         $chatId = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'];
         $msgId = $update['message']['message_id'] ?? $update['callback_query']['message']['message_id'];
 
@@ -130,7 +135,7 @@ class Message {
 
     public function replyWithPhoto($photo, $caption = null, $keyboard = null)
     {
-        $update = $this->update->getUpdateWebhook();
+        $update = $this->update->getUpdates();
         $chatId = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'];
         $msgId = $update['message']['message_id'] ?? $update['callback_query']['message']['message_id'];
 
@@ -140,7 +145,7 @@ class Message {
 
     public function replyWithVideo($video, $caption = null, $keyboard = null)
     {
-        $update = $this->update->getUpdateWebhook();
+        $update = $this->update->getUpdates();
         $chatId = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'];
         $msgId = $update['message']['message_id'] ?? $update['callback_query']['message']['message_id'];
 
@@ -150,7 +155,7 @@ class Message {
 
     public function replyWithDocument($document, $caption = null, $keyboard = null)
     {
-        $update = $this->update->getUpdateWebhook();
+        $update = $this->update->getUpdates();
         $chatId = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'];
         $msgId = $update['message']['message_id'] ?? $update['callback_query']['message']['message_id'];
 
@@ -161,7 +166,7 @@ class Message {
 
     public function editReplyMessageText($text, $keyboard = null)
     {
-        $update = $this->update->getUpdateWebhook();
+        $update = $this->update->getUpdates();
         $chatId = $update['message']['chat']['id'] ?? $update['callback_query']['message']['chat']['id'];
         $msgId = $update['message']['message_id'] ?? $update['callback_query']['message']['message_id'];
 
