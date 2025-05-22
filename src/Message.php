@@ -25,9 +25,6 @@ class Message {
             'reply_to_message_id' => $msgId,
             'reply_markup' => $keyboard
         ];
-        $params = array_filter($params, function ($value) {
-            return !is_null($value);
-        });
         $data = $this->telegram->request('sendmessage', $params);
         return $data;
     }
