@@ -3,9 +3,10 @@
   "description": "Telegram bot uchun PHP class",
   "type": "library",
   "license": "MIT",
+  "version": "v^1.1.0",
   "autoload": {
     "psr-4": {
-      "sadiyuz": "src/"
+      "sadiyuz\\": "src/"
     }
   },
   "authors": [
