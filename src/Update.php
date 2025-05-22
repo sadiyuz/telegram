@@ -11,7 +11,7 @@ class Update
 
     public function __construct(Telegram $telegram)
     {
-        $this->telegram = $bot_token;
+        $this->telegram = $telegram;
     }
 
     public function getUpdatesPolling(int $timeout = 10): array

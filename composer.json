@@ -23,6 +23,6 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "sadiyuz/telegram-class": "dev-main"
+    "sadiyuz/telegram-class": "^1.1"
   }
 }
